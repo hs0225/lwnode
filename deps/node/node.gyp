@@ -387,8 +387,7 @@
         [ 'lwnode=="true"', {
           'cflags': ['-Wno-write-strings'],
           'sources': [
-            'src/node_main_lw.cc',
-            'src/lwnode/aul-event-receiver.cc'
+            'src/node_main_lw.cc'
           ],
         }, {
           'sources': [
@@ -798,6 +797,10 @@
           'dependencies': [
             '<(lwnode_jsengine_path)/escargotshim.gyp:escargotshim',
             '<(lwnode_jsengine_path)/deps/node-bindings/node_bindings.gyp:node_bindings',
+          ],
+          'source': [
+            'src/lwnode/aul-event-receiver.cc',
+            'src/lwnode/lwnode-public.cc',
           ],
           'conditions': [
             ['external_builtins=="true"', {
