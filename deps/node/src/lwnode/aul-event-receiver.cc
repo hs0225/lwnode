@@ -22,7 +22,7 @@
 #include "lwnode.h"
 #include "trace.h"
 
-#ifdef HOST_TIZEN
+#if defined(HOST_TIZEN) && defined(LWNODE_TIZEN_AUL)
 
 int AULEventReceiver::aulEventHandler(aul_type type, bundle* b, void* data) {
   switch (type) {

@@ -1,5 +1,6 @@
 {
   'variables': {
+    'enable_aul%': 'false',
     'v8_use_siphash%': 0,
     'v8_trace_maps%': 0,
     'v8_enable_pointer_compression%': 0,
@@ -800,8 +801,17 @@
             ['target_os=="tizen"', {
               'dependencies': [
                 '<(lwnode_jsengine_path)/deps/tizen.gyp:dlog',
-                '<(lwnode_jsengine_path)/deps/tizen.gyp:appcommon',
               ],
+              'conditions': [
+                  ['enable_aul=="true"', {
+                    'dependencies': [
+                      '<(lwnode_jsengine_path)/deps/tizen.gyp:appcommon',
+                    ],
+                    'defines': [
+                      'LWNODE_TIZEN_AUL=1',
+                    ]
+                  }],
+              ]
             }],
             ['external_builtins=="true"', {
               'variables': {

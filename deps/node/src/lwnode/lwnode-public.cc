@@ -34,15 +34,18 @@ bool ParseAULEvent(int argc, char** argv) {
 }
 
 bool InitScriptRootPath(const std::string path) {
-#if defined(HOST_TIZEN)
   int result;
+
+#if defined(HOST_TIZEN) && defined(LWNODE_TIZEN_AUL)
   if (path.empty()) {
     char* path = app_get_resource_path();
     result = uv_chdir(path);
     free(path);
-  } else {
-    result = uv_chdir(path.c_str());
+    return result == 0;
   }
+#endif
+
+  result = uv_chdir(path.c_str());
 
   if (result != 0) {
     LWNODE_DEV_LOGF("ERROR: Failed to change directory. (%d)\n", -errno);
@@ -51,9 +54,6 @@ bool InitScriptRootPath(const std::string path) {
   }
 
   return true;
-#else
-  return false;
-#endif
 }
 
 int Start(int argc, char** argv) {

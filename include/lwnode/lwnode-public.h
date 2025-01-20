@@ -26,10 +26,10 @@ namespace lwnode {
 
 LWNODE_EXPORT bool ParseAULEvent(int argc, char** argv);
 
-// Support only Tizen platform.
-// Sets the path of the root directory of the JavaScript. If you do not put the
-// path argument, the root path is the app's resource path
-// by default. Be sure to call this function before lwnode::Start function.
+// Sets the path of the root directory of the JavaScript. If you do
+// not put the path argument, the root path is the app's resource path by
+// default on Tizen AUL mode. Be sure to call this function before lwnode::Start
+// function.
 LWNODE_EXPORT bool InitScriptRootPath(const std::string path = "");
 
 LWNODE_EXPORT int Start(int argc, char** argv);
