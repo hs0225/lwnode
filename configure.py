@@ -80,6 +80,7 @@ def lwnode_gyp_opts(opts):
   args += ['-Dtarget_os=' + ('tizen' if opts.tizen else 'linux')]
   args += ['-Dprofile=' + str(opts.profile)] if opts.tizen else []
   args += ['-Drevision=' + opts.revision]
+  args += ['-Denable_aul=' + b(opts.aul)]
 
   # definitions (used: escargot)
   args += ['-Descargot_build_mode=' + ('debug' if opts.debug else 'release')]
@@ -187,6 +188,14 @@ def setupCLIOptions(parser):
       dest='tizen',
       default=False,
       help='Build for Tizen Platform (%default)',
+  )
+
+  lwnode_optgroup.add_option(
+      '--aul',
+      action='store_true',
+      dest='aul',
+      default=False,
+      help='Enable AUL for Tizen Platform (%default)',
   )
 
   lwnode_optgroup.add_option(

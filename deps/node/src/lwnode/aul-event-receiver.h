@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#ifdef HOST_TIZEN
+#if defined(HOST_TIZEN) && defined(LWNODE_TIZEN_AUL)
 #include <app_common.h>
 #include <aul.h>
 #include <bundle.h>
@@ -27,7 +27,7 @@ class AULEventReceiver {
  public:
   static AULEventReceiver* getInstance();
 
-#ifdef HOST_TIZEN
+#if defined(HOST_TIZEN) && defined(LWNODE_TIZEN_AUL)
   static int aulEventHandler(aul_type type, bundle* b, void* data);
   bool hasAulArguments(int argc, char* argv[], std::string& parsed_bundle);
   bool start(int argc, char* argv[]);
