@@ -1069,13 +1069,55 @@ void TearDownOncePerProcess() {
   per_process::v8_platform.Dispose();
 }
 
+#if defined(LWNODE)
+std::pair<bool, int> InitializeNode(int argc, char** argv, NodeMainInstance** main_instance) {
+  InitializationResult result = InitializeOncePerProcess(argc, argv);
+  if (result.early_return) {
+    return std::make_pair(true, result.exit_code);
+  }
+
+  Isolate::CreateParams params;
+  const std::vector<size_t>* indexes = nullptr;
+  std::vector<intptr_t> external_references;
+
+  bool force_no_snapshot =
+      per_process::cli_options->per_isolate->no_node_snapshot;
+  if (!force_no_snapshot) {
+    v8::StartupData* blob = NodeMainInstance::GetEmbeddedSnapshotBlob();
+    if (blob != nullptr) {
+      // TODO(joyeecheung): collect external references and set it in
+      // params.external_references.
+      external_references.push_back(reinterpret_cast<intptr_t>(nullptr));
+      params.external_references = external_references.data();
+      params.snapshot_blob = blob;
+      indexes = NodeMainInstance::GetIsolateDataIndexes();
+    }
+  }
+  uv_loop_configure(uv_default_loop(), UV_METRICS_IDLE_TIME);
+
+  *main_instance = new NodeMainInstance(&params,
+                                        uv_default_loop(),
+                                        per_process::v8_platform.Platform(),
+                                        result.args,
+                                        result.exec_args,
+                                        indexes);
+  return std::make_pair(false, result.exit_code);
+}
+
+void DisposeNode(NodeMainInstance* main_instance) {
+  delete main_instance;
+
+  TearDownOncePerProcess();
+}
+#endif
+
 int Start(int argc, char** argv) {
   InitializationResult result = InitializeOncePerProcess(argc, argv);
   if (result.early_return) {
     return result.exit_code;
   }
 
-  #if defined(LWNODE)
+#if defined(LWNODE)
   LWNode::LWNodeMainRunner nodeMainRunner; // @lwnode
   {
     Isolate::CreateParams params;

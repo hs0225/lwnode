@@ -71,15 +71,24 @@ int main(int argc, char* argv[]) {
   setvbuf(stdout, nullptr, _IONBF, 0);
   setvbuf(stderr, nullptr, _IONBF, 0);
 
+  lwnode::Runtime runtime;
+  std::pair<bool, int> init_result; // early_return, exit_code
+
   if (lwnode::ParseAULEvent(argc, argv)) {
     if (!lwnode::InitScriptRootPath()) {
       exit(-errno);
     }
 
     char* args[] = {"", "index.js", nullptr};
-    return lwnode::Start(2, args);
+    init_result = runtime.Init(2, args);
+  } else {
+    // started by command line
+    init_result = runtime.Init(argc, argv);
   }
 
-  // started by command line
-  return lwnode::Start(argc, argv);
+  if (init_result.first) {
+    return init_result.second;
+  }
+
+  return runtime.Run();
 }

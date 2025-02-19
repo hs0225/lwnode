@@ -1069,6 +1069,12 @@ void RegisterSignalHandler(int signal,
                            bool reset_handler = false);
 #endif  // _WIN32
 
+#ifdef LWNODE // @lwnode
+class NodeMainInstance;
+std::pair<bool, int> InitializeNode(int argc, char** argv, NodeMainInstance** main_instance);
+void DisposeNode(NodeMainInstance* main_instance);
+#endif
+
 }  // namespace node
 
 #endif  // SRC_NODE_H_
