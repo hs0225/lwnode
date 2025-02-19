@@ -32,9 +32,26 @@ LWNODE_EXPORT bool ParseAULEvent(int argc, char** argv);
 // function.
 LWNODE_EXPORT bool InitScriptRootPath(const std::string path = "");
 
-// Sets the dlog tag id for debugging. This is only used on Tizen when not in AUL mode.
+// Sets the dlog tag id for debugging. This is only used on Tizen when not in
+// AUL mode.
 LWNODE_EXPORT void SetDlogID(const std::string& appId);
 
-LWNODE_EXPORT int Start(int argc, char** argv);
+class LWNODE_EXPORT Runtime {
+ public:
+  Runtime();
+  ~Runtime();
+
+  // Initializes the runtime and returns true if it early termination and sets
+  // the exit code to the second return value. Otherwise, it returns false
+  // and you need call Run() to run the runtime.
+  std::pair<bool, int> Init(int argc, char** argv);
+
+  // Runs the runtime and returns the exit code. The runtime must be initialized.
+  int Run();
+
+ private:
+  class Internal;
+  Internal* internal_ = nullptr;
+};
 
 }  // namespace lwnode

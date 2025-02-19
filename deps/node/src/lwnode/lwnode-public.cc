@@ -20,9 +20,58 @@
 #include "lwnode.h"
 #include "lwnode/aul-event-receiver.h"
 #include "node.h"
+#include "node_main_lw_runner-inl.h"
 #include "trace.h"
 
+using namespace node;
+
 namespace lwnode {
+
+class Runtime::Internal {
+  friend Runtime;
+
+ public:
+  ~Internal() {
+    if (is_initialized && instance_) {
+      DisposeNode(instance_);
+    }
+  }
+
+  std::pair<bool, int> Init(int argc, char** argv) {
+    is_initialized = true;
+    return InitializeNode(argc, argv, &instance_);
+  }
+
+  int Run() {
+    if (instance_ == nullptr) {
+      return -1;
+    }
+
+    return runner_.Run(*instance_);
+    ;
+  }
+
+ private:
+  NodeMainInstance* instance_{nullptr};
+  LWNode::LWNodeMainRunner runner_;
+  bool is_initialized{false};
+};
+
+Runtime::Runtime() {
+  internal_ = new Internal();
+}
+
+Runtime::~Runtime() {
+  delete internal_;
+}
+
+std::pair<bool, int> Runtime::Init(int argc, char** argv) {
+  return internal_->Init(argc, argv);
+}
+
+int Runtime::Run() {
+  return internal_->Run();
+}
 
 bool ParseAULEvent(int argc, char** argv) {
   bool result = AULEventReceiver::getInstance()->start(argc, argv);
@@ -71,10 +120,6 @@ void SetDlogID(const std::string& tag) {
     return s_loggerOutput;
   });
 #endif
-}
-
-int Start(int argc, char** argv) {
-  return node::Start(argc, argv);
 }
 
 }  // namespace lwnode
