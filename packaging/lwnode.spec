@@ -65,7 +65,7 @@ BuildRequires: libasan
 # Initialize the variables
 %{!?target: %define target lwnode}
 %{!?lib_type: %define lib_type shared} # <shared|static>
-%{!?static_escargot: %define static_escargot 1}
+%{!?static_escargot: %define static_escargot 0}
 %{!?debug: %define debug 0}
 
 %description
@@ -124,6 +124,8 @@ echo $CFLAGS
 
 %if 0%{?static_escargot} == 1
   %define jsengine_config --escargot-lib-type static_lib
+%else
+  %define jsengine_config --escargot-lib-type shared_lib
 %endif
 
 %if (0%{?tizen_version_major} == 4) && (0%{?tizen_version_minor} == 0)

@@ -17,7 +17,11 @@
 #include "TizenRuntimeInfo.h"
 #include <pkgmgr-info.h>
 #include <tpk_manifest_handlers/privileges_handler.h>
+
+#if __STDC_VERSION__ >= 201710L
 #include <tpk_manifest_handlers/tpk_config_parser.h>
+#endif
+
 #include <memory>
 #include <sstream>
 #include "TizenDeviceAPIBase.h"
@@ -73,9 +77,9 @@ const std::string TizenRuntimeInfo::privileges() {
   if (!privileges_.empty()) {
     return privileges_;
   }
-
+#if __STDC_VERSION__ >= 201710L
   tpk::parse::TPKConfigParser parser;
-  boost::filesystem::path manifestPath(rootpath_ + "/tizen-manifest.xml");
+  std::filesystem::path manifestPath(rootpath_ + "/tizen-manifest.xml");
   parser.ParseManifest(manifestPath);
   if (!parser.ParseManifest(manifestPath)) {
     DEVICEAPI_LOG_ERROR("cannot read manifest");
@@ -94,7 +98,9 @@ const std::string TizenRuntimeInfo::privileges() {
 
   privileges_ = stream.str();
   DEVICEAPI_LOG_INFO("privileges: %s", privileges_.c_str());
-
+#else
+  DEVICEAPI_LOG_ERROR("cannot support privileges");
+#endif
   return privileges_;
 }
 

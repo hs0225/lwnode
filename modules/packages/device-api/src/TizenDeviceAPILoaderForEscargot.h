@@ -93,7 +93,7 @@ class TizenStrings {
  * ExtensionManagerInstance: (manager) * number of ESVMInstances
  */
 
-class ExtensionManagerInstance : public gc {
+class ExtensionManagerInstance : public gc_cleanup {
  public:
   ExtensionManagerInstance(Escargot::ContextRef* context);
   ~ExtensionManagerInstance();
@@ -152,9 +152,8 @@ class ExtensionManagerInstance : public gc {
 #undef DECLARE_TIZEN_OBJECT
 
   // static members
-  typedef std::map<Escargot::ContextRef*, 
-    Escargot::PersistentRefHolder<ExtensionManagerInstance>>
-      ExtensionManagerInstanceMap;
+  typedef std::map<Escargot::ContextRef*, ExtensionManagerInstance*>
+    ExtensionManagerInstanceMap;
   static ExtensionManagerInstanceMap s_extensionManagerInstances;
   static std::mutex s_mutex;
 };

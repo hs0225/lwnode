@@ -30,6 +30,10 @@
 
 using namespace LWNode;
 
+struct DeviceAPIInstanceData {
+  Escargot::PersistentRefHolder<DeviceAPI::ExtensionManagerInstance> instance;
+};
+
 static void runInitialScript(napi_env env) {
   const char* scriptText =
       "if(!global.WebAPIException){ "
@@ -44,6 +48,22 @@ static napi_value InitMethod(napi_env env, napi_callback_info info) {
   napi_context context;
 
   NAPI_CALL(napi_get_context(env, context));
+
+  DeviceAPIInstanceData* instance_data = new DeviceAPIInstanceData();
+  napi_status status = napi_set_instance_data(
+      env,
+      instance_data,
+      [](napi_env env, void* finalize_data, void* finalize_hint) {
+        auto instance_data = static_cast<DeviceAPIInstanceData*>(finalize_data);
+        instance_data->instance.release();
+        delete instance_data;
+      },
+      nullptr);
+
+  if (status != napi_ok) {
+    DEVICEAPI_LOG_ERROR(
+        "Failed to set instance data. This may cause a memory leak.")
+  }
 
   auto esContext = Utils::ToEsContext(context);
 
@@ -76,9 +96,10 @@ static napi_value InitMethod(napi_env env, napi_callback_info info) {
             new Params(idler, data, env));
       });
 
-  auto instance = DeviceAPI::ExtensionManagerInstanceGet(esContext);
+  DeviceAPI::ExtensionManagerInstance* instance =
+      DeviceAPI::ExtensionManagerInstanceGet(esContext);
   if (!instance) {
-    DeviceAPI::initialize(esContext);
+    instance_data->instance = DeviceAPI::initialize(esContext);
   }
 
   runInitialScript(env);
@@ -87,7 +108,7 @@ static napi_value InitMethod(napi_env env, napi_callback_info info) {
 }
 
 #define DECLARE_NAPI_METHOD(name, func)                                        \
-  { name, 0, func, 0, 0, 0, napi_default, 0 }
+  {name, 0, func, 0, 0, 0, napi_default, 0}
 
 napi_value InitModule(napi_env env, napi_value exports) {
   napi_property_descriptor desc = DECLARE_NAPI_METHOD("init", InitMethod);
