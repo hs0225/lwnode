@@ -54,6 +54,13 @@
           'deps/node/deps/uv/include'
         ],
       },
+      'conditions': [
+        ['target_os=="tizen"', {
+          'dependencies': [
+            'deps/tizen.gyp:dlog',
+          ],
+        }],
+      ],
     },
   ]
 }

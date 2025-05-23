@@ -15,6 +15,9 @@
  */
 
 #include "logger.h"
+#include <uv.h>
+#include <cstdarg>
+#include <cstdio>
 #include <iomanip>  // for setfill and setw
 
 // Dlog
@@ -53,4 +56,28 @@ LogKind* LogKind::getInstance() {
 LogKind::LogKind() {
   user_ = std::make_shared<DLogConfig>("USER");
   lwnode_ = std::make_shared<DLogConfig>("LWNODE");
+}
+
+PerformanceLog::PerformanceLog(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char buffer[1024];
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+  message_ = buffer;
+  start_time_ = std::chrono::high_resolution_clock::now();
+
+  PLOG("(%.3f)%s", uv_hrtime() / 1000000.0, message_.c_str());
+}
+
+PerformanceLog::~PerformanceLog() {
+  auto end_time = std::chrono::high_resolution_clock::now();
+  auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+      end_time - start_time_);
+  double duration_ms = duration_us.count() / 1000.0;
+
+  PLOG("(%.3f)[%.0lfms] %s",
+         uv_hrtime() / 1000000.0,
+         duration_ms,
+         message_.c_str());
 }

@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <chrono>
+
 #include "color.h"
 #include "logger-impl.h"
 #include "logger-util.h"
@@ -121,4 +123,21 @@ class LWNODE_EXPORT LogKind {
   LogKind();
   std::shared_ptr<DLogConfig> user_;
   std::shared_ptr<DLogConfig> lwnode_;
+};
+
+#if 0
+#define PLOG(fmt, ...) fprintf(stdout, "<lwnode-debug>" fmt "\n", ##__VA_ARGS__);
+#else
+#include <dlog.h>
+#define PLOG(fmt, ...) dlog_print(DLOG_INFO, "LWNODE", "<lwnode-debug>" fmt, ##__VA_ARGS__);
+#endif
+
+class PerformanceLog {
+ public:
+  PerformanceLog(const char* fmt, ...);
+  ~PerformanceLog();
+
+ private:
+  std::string message_;
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_time_;
 };

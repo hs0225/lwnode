@@ -361,6 +361,31 @@ int uv_loop_alive(const uv_loop_t* loop) {
     return uv__loop_alive(loop);
 }
 
+#if 0
+#define PLOG(fmt, ...) fprintf(stdout, "<lwnode-debug>" fmt "\n", ##__VA_ARGS__);
+#else
+#include <dlog.h>
+#define PLOG(fmt, ...) dlog_print(DLOG_INFO, "LWNODE", "<lwnode-debug>" fmt, ##__VA_ARGS__);
+#endif
+
+uint64_t g_start_time;
+char g_message[1024];
+static void start_timer(const char* msg) {
+  memset(g_message, 0, sizeof(g_message));
+  strncpy(g_message, msg, sizeof(g_message));
+  
+  g_start_time = uv_hrtime();
+  PLOG("(%.3f)%s", g_start_time / 1000000.0, msg);
+  return;
+}
+
+static void end_timer() {
+  uint64_t now = uv_hrtime();
+  uint64_t duration_ns = now - g_start_time;
+  double duration_ms = (double)duration_ns / 1000000.0;
+
+  PLOG("(%.3f)[%lfms]%s done", now/ 1000000.0, duration_ms, g_message);
+}
 
 int uv_run(uv_loop_t* loop, uv_run_mode mode) {
   int timeout;
@@ -373,16 +398,33 @@ int uv_run(uv_loop_t* loop, uv_run_mode mode) {
 
   while (r != 0 && loop->stop_flag == 0) {
     uv__update_time(loop);
+
+    start_timer("run timer");
     uv__run_timers(loop);
+    end_timer();
+
+    
     ran_pending = uv__run_pending(loop);
+
+    start_timer("run idle");
     uv__run_idle(loop);
+    end_timer();
+
+    start_timer("run pending");
     uv__run_prepare(loop);
+    end_timer();
 
     timeout = 0;
-    if ((mode == UV_RUN_ONCE && !ran_pending) || mode == UV_RUN_DEFAULT)
+    if ((mode == UV_RUN_ONCE && !ran_pending) || mode == UV_RUN_DEFAULT) {
+      start_timer("run backend_timer");
       timeout = uv_backend_timeout(loop);
+      end_timer();
+    }
+      
 
+    start_timer("run poll");
     uv__io_poll(loop, timeout);
+    end_timer();
 
     /* Run one final update on the provider_idle_time in case uv__io_poll
      * returned because the timeout expired, but no events were received. This
@@ -391,8 +433,13 @@ int uv_run(uv_loop_t* loop, uv_run_mode mode) {
      */
     uv__metrics_update_idle_time(loop);
 
+    start_timer("run check");
     uv__run_check(loop);
+    end_timer();
+
+    start_timer("run close");
     uv__run_closing_handles(loop);
+    end_timer();
 
     if (mode == UV_RUN_ONCE) {
       /* UV_RUN_ONCE implies forward progress: at least one callback must have

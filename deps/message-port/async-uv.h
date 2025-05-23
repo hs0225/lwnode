@@ -51,4 +51,5 @@ class EXPORT_API AsyncUV {
 
   static std::queue<Task> queue_;
   static std::mutex queue_mutex_;
+  std::chrono::high_resolution_clock::time_point start_time_;
 };

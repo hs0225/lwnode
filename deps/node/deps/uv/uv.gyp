@@ -360,6 +360,11 @@
             'src/unix/os390-syscalls.c'
           ]
         }],
+        ['target_os=="tizen"', {
+          'dependencies': [
+            '../../../tizen.gyp:dlog',
+          ],
+        }],
       ]
     },
   ]

@@ -87,6 +87,13 @@ bool AsyncUV::IsPendingTasksEmpty() {
   return queue_.empty();
 }
 
+#if 0
+#define PLOG(fmt, ...) fprintf(stdout, "<lwnode-debug>" fmt "\n", ##__VA_ARGS__);
+#else
+#include <dlog.h>
+#define PLOG(fmt, ...) dlog_print(DLOG_INFO, "LWNODE", "<lwnode-debug>" fmt, ##__VA_ARGS__);
+#endif
+
 void AsyncUV::Init(uv_loop_t* loop, Task task) {
   task_ = task;
 
@@ -95,7 +102,22 @@ void AsyncUV::Init(uv_loop_t* loop, Task task) {
   uv_async_init(loop, uv_h_, [](uv_async_t* handle) {
     auto event = static_cast<AsyncUV*>(handle->data);
     if (event->task_) {
+      auto now = std::chrono::system_clock::now();
+      auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                             now - event->start_time_)
+                             .count();
+      PLOG("(%.3f)[%.0lfms] (MessagePort)js callback: %p",
+             uv_hrtime() / 1000000.0,
+             duration_us / 1000.0,
+             handle);
       event->task_(handle);
+      duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                        std::chrono::system_clock::now() - now)
+                        .count();
+      PLOG("(%.3f)[%.0lfms] (MessagePort)done js callback: %p",
+             uv_hrtime() / 1000000.0,
+             duration_us / 1000.0,
+             handle);
     }
     delete event;
   });
@@ -106,6 +128,8 @@ bool AsyncUV::Send() {
   if (!uv_h_) {
     return false;
   }
+  PLOG("(%.3f)(MessagePort)send: %p", uv_hrtime() / 1000000.0, uv_h_);
+  start_time_ = std::chrono::system_clock::now();
   uv_async_send(uv_h_);
   return true;
 }

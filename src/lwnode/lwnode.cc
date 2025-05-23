@@ -316,6 +316,7 @@ void InitializeProcessMethods(Local<Object> target, Local<Context> context) {
 
 void IdleGC(v8::Isolate* isolate) {
   LWNODE_LOG_INFO("IdleGC");
+  PerformanceLog l("DelayedGC::handle");
   if (isolate) {
     IsolateWrap::fromV8(isolate)->vmInstance()->enterIdleMode();
   }
